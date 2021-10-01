@@ -1,0 +1,61 @@
+name: 'Terraform CI'
+description: 'Validate and runs a terraform plan'
+inputs:
+  terraform_version:
+    description: 'Terraform version to use'
+    required: true
+    default: '0.14.x'
+runs:
+  using: composite
+  steps:
+    # - uses: actions/checkout@v2
+    - uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 0.14.x
+        terraform_wrapper: true
+    - name: terraform init
+      run: |
+        terraform init -input=false \
+          -backend-config=container_name=$TERRAFORM_BACKEND_TFSTATE_CONTAINER_NAME \
+          -backend-config=key=$TERRAFORM_BACKEND_TFSTATE_NAME \
+          -backend-config=storage_account_name=$TERRAFORM_BACKEND_TFSTATE_STA_NAME \
+          -backend-config=resource_group_name=$TERRAFORM_BACKEND_TFSTATE_RG_NAME
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+        ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+        ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+    - name: terraform plan
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+        ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+        ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+      run: |
+        terraform plan -input=false -out tfplan
+    - name: capture terraform plan
+      id: tfplan_plain
+      env:
+        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+        ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+        ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+      run: |
+        # Adds the plan in plain text to a env var called TFPLAN. Used to write the comment in the PR
+        terraform show -no-color tfplan
+    - uses: actions/github-script@v5
+      name: Add plan to PR comment
+      env:
+        PR_COMMENT_BODY: |
+          ```hcl
+          ${{ steps.tfplan_plain.outputs.stdout }}
+          ```
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: process.env.PR_COMMENT_BODY
+          })
