@@ -8,7 +8,7 @@ inputs:
 runs:
   using: composite
   steps:
-    # - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
     - uses: hashicorp/setup-terraform@v1
       with:
         terraform_version: 0.14.x
@@ -39,7 +39,6 @@ runs:
           ${{ steps.tfplan_plain.outputs.stdout }}
           ```
       with:
-        # github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           github.rest.issues.createComment({
             issue_number: context.issue.number,
