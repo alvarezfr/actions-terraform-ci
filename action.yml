@@ -20,26 +20,11 @@ runs:
           -backend-config=key=$TERRAFORM_BACKEND_TFSTATE_NAME \
           -backend-config=storage_account_name=$TERRAFORM_BACKEND_TFSTATE_STA_NAME \
           -backend-config=resource_group_name=$TERRAFORM_BACKEND_TFSTATE_RG_NAME
-      env:
-        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
-        ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
-        ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
     - name: terraform plan
-      env:
-        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
-        ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
-        ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
       run: |
         terraform plan -input=false -out tfplan
     - name: capture terraform plan
       id: tfplan_plain
-      env:
-        ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
-        ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
-        ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
       run: |
         # Adds the plan in plain text to a env var called TFPLAN. Used to write the comment in the PR
         terraform show -no-color tfplan
