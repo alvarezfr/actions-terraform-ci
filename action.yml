@@ -14,6 +14,7 @@ runs:
         terraform_version: 0.14.x
         terraform_wrapper: true
     - name: terraform init
+      shell: bash
       run: |
         terraform init -input=false \
           -backend-config=container_name=$TERRAFORM_BACKEND_TFSTATE_CONTAINER_NAME \
@@ -21,10 +22,12 @@ runs:
           -backend-config=storage_account_name=$TERRAFORM_BACKEND_TFSTATE_STA_NAME \
           -backend-config=resource_group_name=$TERRAFORM_BACKEND_TFSTATE_RG_NAME
     - name: terraform plan
+      shell: bash
       run: |
         terraform plan -input=false -out tfplan
     - name: capture terraform plan
       id: tfplan_plain
+      shell: bash
       run: |
         # Adds the plan in plain text to a env var called TFPLAN. Used to write the comment in the PR
         terraform show -no-color tfplan
